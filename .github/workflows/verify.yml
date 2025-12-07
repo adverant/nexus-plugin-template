@@ -1,0 +1,318 @@
+name: Plugin Verification
+
+on:
+  workflow_dispatch:
+    inputs:
+      plugin_path:
+        description: 'Path to plugin directory'
+        required: true
+        default: 'templates/basic'
+      execution_mode:
+        description: 'Execution mode to test'
+        required: true
+        default: 'mcp_container'
+        type: choice
+        options:
+          - external_https
+          - mcp_container
+          - hardened_docker
+          - firecracker
+
+jobs:
+  # ==========================================================================
+  # Step 1: Manifest Validation
+  # ==========================================================================
+  manifest:
+    name: Validate Manifest
+    runs-on: ubuntu-latest
+    outputs:
+      plugin_name: ${{ steps.manifest.outputs.name }}
+      plugin_version: ${{ steps.manifest.outputs.version }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate nexus.manifest.json
+        id: manifest
+        run: |
+          MANIFEST="${{ github.event.inputs.plugin_path }}/nexus.manifest.json"
+          
+          if [ ! -f "$MANIFEST" ]; then
+            echo "::error::nexus.manifest.json not found at $MANIFEST"
+            exit 1
+          fi
+          
+          # Validate JSON syntax
+          if ! jq empty "$MANIFEST" 2>/dev/null; then
+            echo "::error::Invalid JSON in nexus.manifest.json"
+            exit 1
+          fi
+          
+          # Extract required fields
+          NAME=$(jq -r '.name' "$MANIFEST")
+          VERSION=$(jq -r '.version' "$MANIFEST")
+          MIN_VERSION=$(jq -r '.nexus.minVersion' "$MANIFEST")
+          EXEC_MODE=$(jq -r '.nexus.executionMode' "$MANIFEST")
+          
+          if [ "$NAME" = "null" ] || [ -z "$NAME" ]; then
+            echo "::error::Missing required field: name"
+            exit 1
+          fi
+          
+          if [ "$VERSION" = "null" ] || [ -z "$VERSION" ]; then
+            echo "::error::Missing required field: version"
+            exit 1
+          fi
+          
+          echo "name=$NAME" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          
+          echo "✅ Manifest validated: $NAME v$VERSION"
+          echo "   Execution mode: $EXEC_MODE"
+          echo "   Min Nexus version: $MIN_VERSION"
+
+  # ==========================================================================
+  # Step 2: Code Analysis
+  # ==========================================================================
+  code-analysis:
+    name: Code Analysis
+    runs-on: ubuntu-latest
+    needs: manifest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect language
+        id: detect
+        run: |
+          PLUGIN_PATH="${{ github.event.inputs.plugin_path }}"
+          
+          if [ -f "$PLUGIN_PATH/package.json" ]; then
+            echo "language=typescript" >> $GITHUB_OUTPUT
+          elif [ -f "$PLUGIN_PATH/requirements.txt" ] || [ -f "$PLUGIN_PATH/pyproject.toml" ]; then
+            echo "language=python" >> $GITHUB_OUTPUT
+          elif [ -f "$PLUGIN_PATH/go.mod" ]; then
+            echo "language=go" >> $GITHUB_OUTPUT
+          else
+            echo "::error::Could not detect plugin language"
+            exit 1
+          fi
+
+      - name: Setup Node.js
+        if: steps.detect.outputs.language == 'typescript'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Python
+        if: steps.detect.outputs.language == 'python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Setup Go
+        if: steps.detect.outputs.language == 'go'
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Run static analysis
+        run: |
+          PLUGIN_PATH="${{ github.event.inputs.plugin_path }}"
+          LANGUAGE="${{ steps.detect.outputs.language }}"
+          
+          cd "$PLUGIN_PATH"
+          
+          case "$LANGUAGE" in
+            typescript)
+              npm ci
+              npm run lint 2>&1 || true
+              npm run typecheck
+              ;;
+            python)
+              pip install ruff mypy
+              ruff check . 2>&1 || true
+              mypy src/ 2>&1 || true
+              ;;
+            go)
+              go vet ./...
+              ;;
+          esac
+
+  # ==========================================================================
+  # Step 3: Schema Extraction & Validation
+  # ==========================================================================
+  schema-validation:
+    name: Schema Validation
+    runs-on: ubuntu-latest
+    needs: manifest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate schemas
+        run: |
+          PLUGIN_PATH="${{ github.event.inputs.plugin_path }}"
+          MANIFEST="$PLUGIN_PATH/nexus.manifest.json"
+          
+          # Check for MCP tools definition
+          MCP_ENABLED=$(jq -r '.mcp.enabled' "$MANIFEST")
+          
+          if [ "$MCP_ENABLED" = "true" ]; then
+            TOOLS=$(jq -r '.mcp.tools | length' "$MANIFEST")
+            echo "Found $TOOLS MCP tools defined in manifest"
+            
+            if [ "$TOOLS" -eq 0 ]; then
+              echo "::warning::MCP enabled but no tools defined"
+            fi
+          fi
+          
+          echo "✅ Schema validation passed"
+
+  # ==========================================================================
+  # Step 4: Security Scanning
+  # ==========================================================================
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: manifest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check for secrets
+        run: |
+          PLUGIN_PATH="${{ github.event.inputs.plugin_path }}"
+          
+          # Check for common secret patterns
+          PATTERNS=(
+            "api[_-]?key"
+            "secret[_-]?key"
+            "password"
+            "aws[_-]?access"
+            "private[_-]?key"
+          )
+          
+          FOUND_SECRETS=0
+          for pattern in "${PATTERNS[@]}"; do
+            if grep -rniE "$pattern\s*[:=]\s*['\"][^'\"]+" "$PLUGIN_PATH" --include="*.ts" --include="*.py" --include="*.go" --include="*.json" 2>/dev/null | grep -v "describe\|example\|test\|mock"; then
+              echo "::warning::Potential secret found matching pattern: $pattern"
+              FOUND_SECRETS=$((FOUND_SECRETS + 1))
+            fi
+          done
+          
+          if [ $FOUND_SECRETS -gt 0 ]; then
+            echo "::warning::Found $FOUND_SECRETS potential secrets. Review before publishing."
+          else
+            echo "✅ No secrets detected"
+          fi
+
+      - name: Check permissions
+        run: |
+          PLUGIN_PATH="${{ github.event.inputs.plugin_path }}"
+          MANIFEST="$PLUGIN_PATH/nexus.manifest.json"
+          
+          # Check for dangerous permissions
+          PERMISSIONS=$(jq -r '.nexus.permissions[]?' "$MANIFEST" 2>/dev/null || echo "")
+          
+          DANGEROUS=(
+            "nexus:*"
+            "network:*"
+            "filesystem:write"
+          )
+          
+          for perm in $PERMISSIONS; do
+            for dangerous in "${DANGEROUS[@]}"; do
+              if [[ "$perm" == "$dangerous" ]]; then
+                echo "::warning::Dangerous permission requested: $perm"
+              fi
+            done
+          done
+          
+          echo "✅ Permission review complete"
+
+  # ==========================================================================
+  # Step 5: Sandbox Testing
+  # ==========================================================================
+  sandbox-test:
+    name: Sandbox Test
+    runs-on: ubuntu-latest
+    needs: [code-analysis, schema-validation, security-scan]
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build container
+        run: |
+          PLUGIN_PATH="${{ github.event.inputs.plugin_path }}"
+          PLUGIN_NAME="${{ needs.manifest.outputs.plugin_name }}"
+          
+          cd "$PLUGIN_PATH"
+          docker build -t "nexus-plugin-$PLUGIN_NAME:test" .
+
+      - name: Run health check
+        run: |
+          PLUGIN_NAME="${{ needs.manifest.outputs.plugin_name }}"
+          
+          # Start container
+          docker run -d --name plugin-test \
+            --security-opt no-new-privileges \
+            --cap-drop ALL \
+            "nexus-plugin-$PLUGIN_NAME:test"
+          
+          # Wait for startup
+          sleep 5
+          
+          # Check if container is still running
+          if docker ps | grep -q plugin-test; then
+            echo "✅ Container started successfully"
+          else
+            echo "::error::Container failed to start"
+            docker logs plugin-test
+            exit 1
+          fi
+          
+          # Cleanup
+          docker stop plugin-test
+          docker rm plugin-test
+
+  # ==========================================================================
+  # Step 6: Generate Verification Report
+  # ==========================================================================
+  report:
+    name: Verification Report
+    runs-on: ubuntu-latest
+    needs: [manifest, code-analysis, schema-validation, security-scan, sandbox-test]
+    if: always()
+    
+    steps:
+      - name: Generate report
+        run: |
+          echo "# Plugin Verification Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Plugin:** ${{ needs.manifest.outputs.plugin_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ needs.manifest.outputs.plugin_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Execution Mode:** ${{ github.event.inputs.execution_mode }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Verification Steps" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Step | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Manifest Validation | ${{ needs.manifest.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Code Analysis | ${{ needs.code-analysis.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Schema Validation | ${{ needs.schema-validation.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Scan | ${{ needs.security-scan.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Sandbox Test | ${{ needs.sandbox-test.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY

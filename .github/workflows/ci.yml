@@ -1,0 +1,198 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ==========================================================================
+  # TypeScript SDK and Templates
+  # ==========================================================================
+  typescript:
+    name: TypeScript
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: Install SDK dependencies
+        working-directory: ./src
+        run: npm ci
+
+      - name: Lint SDK
+        working-directory: ./src
+        run: npm run lint
+        continue-on-error: true
+
+      - name: Type check SDK
+        working-directory: ./src
+        run: npm run typecheck
+
+      - name: Test SDK
+        working-directory: ./src
+        run: npm test
+
+      - name: Build SDK
+        working-directory: ./src
+        run: npm run build
+
+      # Test Basic Template
+      - name: Install Basic Template dependencies
+        working-directory: ./templates/basic
+        run: npm ci
+
+      - name: Test Basic Template
+        working-directory: ./templates/basic
+        run: npm test
+
+      - name: Build Basic Template
+        working-directory: ./templates/basic
+        run: npm run build
+
+      # Test MCP Server Template
+      - name: Install MCP Server Template dependencies
+        working-directory: ./templates/mcp-server
+        run: npm ci
+
+      - name: Test MCP Server Template
+        working-directory: ./templates/mcp-server
+        run: npm test
+
+      - name: Build MCP Server Template
+        working-directory: ./templates/mcp-server
+        run: npm run build
+
+      # Test External API Template
+      - name: Install External API Template dependencies
+        working-directory: ./templates/external-api
+        run: npm ci
+
+      - name: Test External API Template
+        working-directory: ./templates/external-api
+        run: npm test
+
+      - name: Build External API Template
+        working-directory: ./templates/external-api
+        run: npm run build
+
+  # ==========================================================================
+  # Python Template
+  # ==========================================================================
+  python:
+    name: Python
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: 'templates/python/requirements*.txt'
+
+      - name: Install dependencies
+        working-directory: ./templates/python
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Lint with ruff
+        working-directory: ./templates/python
+        run: ruff check .
+        continue-on-error: true
+
+      - name: Type check with mypy
+        working-directory: ./templates/python
+        run: mypy src/
+        continue-on-error: true
+
+      - name: Test with pytest
+        working-directory: ./templates/python
+        run: pytest tests/ -v --cov=src --cov-report=xml
+
+  # ==========================================================================
+  # Go Template
+  # ==========================================================================
+  go:
+    name: Go
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache-dependency-path: 'templates/go/go.sum'
+
+      - name: Download dependencies
+        working-directory: ./templates/go
+        run: go mod download
+
+      - name: Verify dependencies
+        working-directory: ./templates/go
+        run: go mod verify
+
+      - name: Lint with golangci-lint
+        uses: golangci/golangci-lint-action@v4
+        with:
+          working-directory: ./templates/go
+          version: latest
+        continue-on-error: true
+
+      - name: Build
+        working-directory: ./templates/go
+        run: go build -v ./...
+
+      - name: Test
+        working-directory: ./templates/go
+        run: go test -v -race -coverprofile=coverage.out ./...
+
+  # ==========================================================================
+  # Docker Build Verification
+  # ==========================================================================
+  docker:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    needs: [typescript, python, go]
+    
+    strategy:
+      matrix:
+        template:
+          - { path: 'templates/basic', name: 'basic' }
+          - { path: 'templates/mcp-server', name: 'mcp-server' }
+          - { path: 'templates/external-api', name: 'external-api' }
+          - { path: 'templates/python', name: 'python' }
+          - { path: 'templates/go', name: 'go' }
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./${{ matrix.template.path }}
+          push: false
+          tags: nexus-plugin-${{ matrix.template.name }}:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
