@@ -1,147 +1,185 @@
 # Nexus Plugin Template
 
-Official template for building Nexus plugins with Plugin Intelligence Document (PID) support.
+[![CI](https://github.com/adverant/nexus-plugin-template/actions/workflows/ci.yml/badge.svg)](https://github.com/adverant/nexus-plugin-template/actions/workflows/ci.yml)
+[![Security](https://github.com/adverant/nexus-plugin-template/actions/workflows/security.yml/badge.svg)](https://github.com/adverant/nexus-plugin-template/actions/workflows/security.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![npm version](https://badge.fury.io/js/%40adverant-nexus%2Fplugin-sdk.svg)](https://www.npmjs.com/package/@adverant-nexus/plugin-sdk)
+
+Official SDK and templates for building Nexus plugins with Plugin Intelligence Document (PID) support.
 
 ## Features
 
+- **Multi-Language Support** - TypeScript, Python, and Go templates
 - **PluginBuilder API** - High-level fluent API for plugin creation
 - **MCPServerBuilder** - Build MCP-compliant servers for AI IDE integration
 - **Zod Schema Integration** - Type-safe schemas with automatic JSON Schema conversion
 - **Plugin Intelligence Documents** - LLM-optimized metadata for tool selection
 - **Testing Utilities** - Mocks and helpers for comprehensive testing
 - **Multi-format Export** - JSON, MCP, Markdown, OpenAPI export
-- **Multi-language Support** - TypeScript, Python, and Go templates
+- **Security First** - Built-in validation, sandboxing support, and security scanning
 
 ## Quick Start
 
-### Using the Template
+### TypeScript (Recommended)
 
 ```bash
-# Clone this template repository
+# Clone the template
 git clone https://github.com/adverant/nexus-plugin-template.git my-plugin
 cd my-plugin
 
-# Choose your language template
-cp -r templates/typescript/* .
-# or: cp -r templates/python/* .
-# or: cp -r templates/go/* .
-
-# Install dependencies
-npm install  # TypeScript
-# or: pip install -r requirements.txt  # Python
-# or: go mod download  # Go
+# Use the basic template
+cp -r templates/basic/* .
+npm install
+npm run build
+npm start
 ```
 
-### TypeScript Example
+### Python
+
+```bash
+cp -r templates/python/* .
+pip install -e .
+python -m my_plugin
+```
+
+### Go
+
+```bash
+cp -r templates/go/* .
+go mod tidy
+go run .
+```
+
+## Templates
+
+| Template | Language | Description | Best For |
+|----------|----------|-------------|----------|
+| `basic` | TypeScript | Simple calculator example | Learning, simple tools |
+| `mcp-server` | TypeScript | GraphRAG integration | Nexus service integration |
+| `external-api` | TypeScript | Weather API with caching | External API wrappers |
+| `python` | Python | FastMCP-based plugin | Python developers |
+| `go` | Go | mcp-go based plugin | Performance-critical tools |
+
+## Documentation
+
+- [Getting Started](./docs/getting-started.md) - Quick start guide for all languages
+- [API Reference](./docs/api-reference.md) - Full SDK API documentation
+- [MCP Integration](./docs/mcp-integration.md) - Claude Code and AI IDE integration
+- [Security Guidelines](./docs/security-guidelines.md) - Security best practices
+- [Deployment Guide](./docs/deployment.md) - VPS deployment guide
+- [LLM Development Context](./docs/CLAUDE_PROMPT.md) - Comprehensive guide for AI assistants
+
+## SDK Installation
+
+```bash
+npm install @adverant-nexus/plugin-sdk zod
+```
+
+## Example Plugin
 
 ```typescript
 import { PluginBuilder, z } from '@adverant-nexus/plugin-sdk';
 
 const myPlugin = PluginBuilder.create({
-  id: 'nexus-plugin-calculator',
-  name: 'calculator',
-  displayName: 'Calculator',
+  id: 'my-plugin',
+  name: 'my-plugin',
+  displayName: 'My Plugin',
   version: '1.0.0',
-  description: 'A simple calculator plugin',
+  description: 'A simple example plugin',
 })
   .setSemantic({
-    capabilities: ['arithmetic_calculation'],
-    domain: 'mathematics',
+    capabilities: ['example_capability'],
+    domain: 'general',
     intent: 'action',
-    whenToUse: ['User needs to perform calculations'],
-    whenNotToUse: ['Complex statistical analysis'],
+    whenToUse: ['User wants to do X'],
+    whenNotToUse: ['User wants to do Y'],
   })
   .addTool({
-    name: 'calculate',
-    displayName: 'Calculate',
-    description: 'Perform arithmetic calculations',
+    name: 'my_tool',
+    displayName: 'My Tool',
+    description: 'Does something useful',
     inputSchema: z.object({
-      expression: z.string().describe('Math expression to evaluate'),
+      input: z.string().describe('The input value'),
     }),
     outputSchema: z.object({
-      result: z.number().describe('Calculation result'),
+      result: z.string().describe('The result'),
     }),
     examples: [
       {
-        name: 'Simple addition',
-        description: 'Add two numbers',
-        input: { expression: '2 + 2' },
-        output: { result: 4 },
+        name: 'Basic example',
+        description: 'Shows basic usage',
+        input: { input: 'hello' },
+        output: { result: 'processed: hello' },
       },
     ],
     handler: async (input) => {
-      // Use a safe parser in production!
-      const result = eval(input.expression);
-      return { result };
+      return { result: `processed: ${input.input}` };
     },
   });
 
 // Generate Plugin Intelligence Document
 const pid = myPlugin.generatePID();
+console.log(JSON.stringify(pid, null, 2));
 
 // Start MCP server
 const server = myPlugin.buildServer();
 server.start();
 ```
 
-## Templates
+## Plugin Intelligence Document (PID)
 
-| Template | Language | Description |
-|----------|----------|-------------|
-| [typescript/basic](./templates/typescript/basic) | TypeScript | Simple plugin demonstrating core concepts |
-| [typescript/mcp-server](./templates/typescript/mcp-server) | TypeScript | MCP server with Nexus service integration |
-| [typescript/external-api](./templates/typescript/external-api) | TypeScript | HTTP API integration with caching |
-| [python/basic](./templates/python/basic) | Python | Python plugin with type hints |
-| [go/basic](./templates/go/basic) | Go | Go plugin with strong typing |
-
-## Plugin Intelligence Documents (PID)
-
-Every plugin generates a PID - a comprehensive, LLM-optimized metadata document:
+Every plugin generates a PID - a comprehensive, LLM-optimized metadata document that includes:
 
 - **Semantic Context**: When to use, when not to use, best practices
 - **Tool Definitions**: Schemas, examples, error documentation
 - **Execution Profile**: Performance, resources, cost
 - **Context Requirements**: Permissions, services, credentials
 
-## Documentation
-
-- [Getting Started](./docs/getting-started.md)
-- [API Reference](./docs/api-reference.md)
-- [MCP Integration](./docs/mcp-integration.md)
-- [Security Guidelines](./docs/security-guidelines.md)
-- [Deployment Guide](./docs/deployment.md)
-- [LLM Development Context](./docs/CLAUDE_PROMPT.md)
-
-## Scripts
-
-```bash
-# Validate your plugin
-npm run validate
-
-# Generate PID
-npm run export:pid
-
-# Run tests
-npm test
-
-# Build for production
-npm run build
-```
+This enables AI assistants to accurately select and chain plugins based on user intent.
 
 ## Contributing
 
 We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md) for details.
 
+### Development
+
+```bash
+# Clone the repository
+git clone https://github.com/adverant/nexus-plugin-template.git
+cd nexus-plugin-template
+
+# Install dependencies
+npm install
+
+# Run tests
+npm test
+
+# Run linting
+npm run lint
+
+# Build
+npm run build
+```
+
 ## Security
 
-Please report security vulnerabilities to security@adverant.ai. See [SECURITY.md](./SECURITY.md) for our security policy.
+Security is a top priority. Please see our [Security Guidelines](./docs/security-guidelines.md) for best practices.
 
-## License
-
-MIT License - see [LICENSE](./LICENSE) for details.
+To report a security vulnerability, please email security@adverant.ai or open a private security advisory on GitHub.
 
 ## Support
 
-- Issues: https://github.com/adverant/nexus-plugin-template/issues
-- Docs: https://docs.nexus.adverant.ai/plugins
-- Discord: https://discord.gg/adverant
+- **Documentation**: [docs.nexus.adverant.ai/plugins](https://docs.nexus.adverant.ai/plugins)
+- **Issues**: [GitHub Issues](https://github.com/adverant/nexus-plugin-template/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/adverant/nexus-plugin-template/discussions)
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
+
+## Acknowledgments
+
+- [Model Context Protocol](https://modelcontextprotocol.io/) by Anthropic
+- [Zod](https://zod.dev/) for schema validation
+- [FastMCP](https://github.com/jlowin/fastmcp) for Python MCP support
+- [mcp-go](https://github.com/mark3labs/mcp-go) for Go MCP support
