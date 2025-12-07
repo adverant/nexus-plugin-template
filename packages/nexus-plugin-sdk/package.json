@@ -1,0 +1,79 @@
+{
+  "name": "@adverant-nexus/plugin-sdk",
+  "version": "3.0.0",
+  "description": "Official SDK for building Nexus plugins with Plugin Intelligence Document (PID) support",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./intelligence": {
+      "import": "./dist/intelligence/index.js",
+      "types": "./dist/intelligence/index.d.ts"
+    },
+    "./testing": {
+      "import": "./dist/testing/index.js",
+      "types": "./dist/testing/index.d.ts"
+    },
+    "./mcp": {
+      "import": "./dist/mcp/index.js",
+      "types": "./dist/mcp/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "templates",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "nexus",
+    "plugin",
+    "sdk",
+    "mcp",
+    "ai",
+    "llm",
+    "claude",
+    "tools"
+  ],
+  "author": "Adverant Inc. <support@adverant.ai>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adverant/nexus-plugin-template.git"
+  },
+  "bugs": {
+    "url": "https://github.com/adverant/nexus-plugin-template/issues"
+  },
+  "homepage": "https://github.com/adverant/nexus-plugin-template#readme",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.23.8",
+    "zod-to-json-schema": "^3.23.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "eslint": "^8.57.0",
+    "typescript": "^5.3.3",
+    "vitest": "^2.0.0"
+  },
+  "peerDependencies": {
+    "zod": "^3.23.0"
+  }
+}
