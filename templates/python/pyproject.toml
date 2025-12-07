@@ -1,0 +1,43 @@
+[tool.poetry]
+name = "nexus-plugin-example"
+version = "1.0.0"
+description = "Example Nexus plugin in Python demonstrating MCP server integration"
+authors = ["Adverant <plugins@adverant.ai>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pydantic = "^2.5.0"
+mcp = "^1.0.0"
+httpx = "^0.25.0"
+structlog = "^23.2.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+pytest-asyncio = "^0.21.0"
+mypy = "^1.7.0"
+ruff = "^0.1.0"
+
+[tool.poetry.scripts]
+nexus-plugin = "src.main:main"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+select = ["E", "F", "I", "N", "W", "UP"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

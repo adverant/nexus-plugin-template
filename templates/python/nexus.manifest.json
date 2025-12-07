@@ -1,0 +1,45 @@
+{
+  "$schema": "https://schema.nexus.adverant.ai/plugin-manifest/v2.json",
+  "name": "nexus-plugin-python-example",
+  "displayName": "Python Example Plugin",
+  "version": "1.0.0",
+  "description": "Example Nexus plugin demonstrating Python MCP server integration with Pydantic validation",
+  "author": {
+    "name": "Adverant",
+    "email": "plugins@adverant.ai",
+    "url": "https://adverant.ai"
+  },
+  "license": "MIT",
+  "nexus": {
+    "minVersion": "2.0.0",
+    "executionMode": "mcp_container",
+    "capabilities": ["mcp_tools"],
+    "permissions": ["nexus:graphrag:read"],
+    "entrypoint": "python -m src.main",
+    "healthCheck": "/health"
+  },
+  "mcp": {
+    "enabled": true,
+    "tools": [
+      {
+        "name": "search_knowledge",
+        "description": "Search the knowledge base for relevant information"
+      },
+      {
+        "name": "store_memory",
+        "description": "Store a memory for later retrieval"
+      }
+    ]
+  },
+  "resources": {
+    "cpuMillicores": 500,
+    "memoryMB": 512,
+    "timeoutMs": 30000
+  },
+  "tests": {
+    "command": "pytest",
+    "coverage": {
+      "minimum": 80
+    }
+  }
+}
