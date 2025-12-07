@@ -1,0 +1,58 @@
+{
+  "$schema": "https://schema.nexus.adverant.ai/plugin-manifest/v2.json",
+  "name": "nexus-plugin-go-template",
+  "displayName": "Go Plugin Template",
+  "version": "1.0.0",
+  "description": "Template for building Nexus plugins in Go with MCP server support",
+  "author": {
+    "name": "Your Name",
+    "email": "you@example.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/your-plugin"
+  },
+  "nexus": {
+    "minVersion": "2.0.0",
+    "executionMode": "mcp_container",
+    "capabilities": ["commands", "mcp_tools"],
+    "permissions": [
+      "nexus:graphrag:read",
+      "nexus:graphrag:write"
+    ],
+    "entrypoint": "./nexus-plugin",
+    "healthCheck": "/health",
+    "schemaSource": "jsonschema",
+    "schemaFile": "schemas/"
+  },
+  "mcp": {
+    "enabled": true,
+    "transport": "stdio",
+    "tools": [
+      {
+        "name": "process_data",
+        "description": "Process and transform data with configurable options"
+      },
+      {
+        "name": "query_cache",
+        "description": "Query the in-memory cache for stored results"
+      },
+      {
+        "name": "aggregate_metrics",
+        "description": "Aggregate metrics from multiple data sources"
+      }
+    ]
+  },
+  "resources": {
+    "cpuMillicores": 250,
+    "memoryMB": 256,
+    "timeoutMs": 30000
+  },
+  "tests": {
+    "command": "go test -v ./...",
+    "coverage": {
+      "minimum": 80
+    }
+  }
+}
