@@ -1,0 +1,76 @@
+{
+  "$schema": "https://schema.nexus.adverant.ai/plugin-manifest/v2.json",
+  "name": "graphrag-helper",
+  "displayName": "GraphRAG Helper",
+  "version": "1.0.0",
+  "description": "Advanced MCP server plugin demonstrating integration with Nexus GraphRAG services for memory storage, semantic search, and knowledge graph operations.",
+  "author": {
+    "name": "Your Name",
+    "email": "your.email@example.com"
+  },
+  "license": "MIT",
+  "keywords": ["graphrag", "memory", "semantic-search", "knowledge-graph", "mcp"],
+  "repository": "https://github.com/your-org/nexus-plugin-graphrag-helper",
+  "nexus": {
+    "minVersion": "2.0.0",
+    "executionMode": "mcp_container",
+    "capabilities": ["commands", "mcp_tools", "resources", "prompts"],
+    "permissions": [
+      "nexus:graphrag:read",
+      "nexus:graphrag:write",
+      "nexus:mageagent:orchestrate"
+    ],
+    "entrypoint": "dist/index.js",
+    "healthCheck": "/health"
+  },
+  "mcp": {
+    "enabled": true,
+    "tools": [
+      {
+        "name": "store_memory",
+        "description": "Store a memory with semantic embeddings"
+      },
+      {
+        "name": "search_memories",
+        "description": "Search memories using semantic similarity"
+      },
+      {
+        "name": "store_document",
+        "description": "Store and chunk a document for retrieval"
+      },
+      {
+        "name": "query_knowledge",
+        "description": "Query the knowledge graph for relationships"
+      }
+    ],
+    "resources": [
+      {
+        "uri": "memory://recent",
+        "description": "Recent memories stored in the session"
+      }
+    ],
+    "prompts": [
+      {
+        "name": "summarize_context",
+        "description": "Summarize the current context from memories"
+      }
+    ]
+  },
+  "resources": {
+    "cpuMillicores": 500,
+    "memoryMB": 512,
+    "timeoutMs": 30000
+  },
+  "tests": {
+    "command": "npm test",
+    "coverage": {
+      "minimum": 80
+    }
+  },
+  "schemaSource": "zod",
+  "schemaFile": "src/schemas.ts",
+  "examplesFrom": [
+    "tests/**/*.test.ts",
+    "docs/examples.md"
+  ]
+}
