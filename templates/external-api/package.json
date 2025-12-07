@@ -1,0 +1,40 @@
+{
+  "name": "nexus-plugin-weather",
+  "version": "1.0.0",
+  "description": "Weather API plugin with caching, rate limiting, and retry logic",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit",
+    "validate": "tsx scripts/validate.ts",
+    "export:pid": "tsx scripts/export-pid.ts"
+  },
+  "dependencies": {
+    "@adverant-nexus/plugin-sdk": "^3.0.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "eslint": "^8.55.0",
+    "tsx": "^4.6.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": [
+    "nexus",
+    "plugin",
+    "weather",
+    "api",
+    "mcp"
+  ]
+}

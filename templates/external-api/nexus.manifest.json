@@ -1,0 +1,61 @@
+{
+  "$schema": "https://schema.nexus.adverant.ai/plugin-manifest/v2.json",
+  "name": "nexus-plugin-weather",
+  "displayName": "Weather API",
+  "version": "1.0.0",
+  "description": "Get weather data, forecasts, and air quality from OpenWeatherMap API with intelligent caching and rate limiting",
+  "author": {
+    "name": "Adverant",
+    "email": "plugins@adverant.ai",
+    "url": "https://adverant.ai"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/adverant/nexus-plugin-weather"
+  },
+  "nexus": {
+    "minVersion": "2.0.0",
+    "executionMode": "mcp_container",
+    "capabilities": ["mcp_tools"],
+    "permissions": ["network:outbound:api.openweathermap.org"],
+    "entrypoint": "dist/index.js",
+    "healthCheck": "/health"
+  },
+  "mcp": {
+    "enabled": true,
+    "tools": [
+      {
+        "name": "get_current_weather",
+        "description": "Get current weather conditions for a location"
+      },
+      {
+        "name": "get_forecast",
+        "description": "Get multi-day weather forecast"
+      },
+      {
+        "name": "get_air_quality",
+        "description": "Get air quality index and pollutant levels"
+      }
+    ]
+  },
+  "resources": {
+    "cpuMillicores": 250,
+    "memoryMB": 256,
+    "timeoutMs": 30000
+  },
+  "tests": {
+    "command": "npm test",
+    "coverage": {
+      "minimum": 80
+    }
+  },
+  "credentials": [
+    {
+      "name": "OPENWEATHERMAP_API_KEY",
+      "description": "OpenWeatherMap API key",
+      "required": true,
+      "url": "https://openweathermap.org/api"
+    }
+  ]
+}
