@@ -1,6 +1,6 @@
 # Contributing to Nexus Plugin Template
 
-Thank you for your interest in contributing! This document provides guidelines and steps for contributing to the Nexus Plugin Template repository.
+Thank you for your interest in contributing to the Nexus Plugin Template! This document provides guidelines and instructions for contributing.
 
 ## Table of Contents
 
@@ -9,9 +9,10 @@ Thank you for your interest in contributing! This document provides guidelines a
 - [Development Setup](#development-setup)
 - [Making Changes](#making-changes)
 - [Pull Request Process](#pull-request-process)
-- [Style Guidelines](#style-guidelines)
+- [Coding Standards](#coding-standards)
 - [Testing](#testing)
 - [Documentation](#documentation)
+- [Community](#community)
 
 ## Code of Conduct
 
@@ -21,53 +22,83 @@ This project adheres to the [Contributor Covenant Code of Conduct](./CODE_OF_CON
 
 ### Prerequisites
 
-- Node.js 20+
-- npm or pnpm
-- Git
-- (Optional) Python 3.10+ for Python templates
-- (Optional) Go 1.21+ for Go templates
+- **Node.js** 18+ (for TypeScript development)
+- **Python** 3.10+ (for Python template development)
+- **Go** 1.21+ (for Go template development)
+- **Git** for version control
+- **Docker** (optional, for testing containerized builds)
 
-### Repository Structure
+### Fork and Clone
 
-```
-nexus-plugin-template/
-├── packages/
-│   └── nexus-plugin-sdk/     # Core SDK
-├── templates/
-│   ├── typescript/           # TypeScript templates
-│   ├── python/               # Python templates
-│   └── go/                   # Go templates
-├── docs/                     # Documentation
-├── scripts/                  # Build and utility scripts
-└── .github/                  # GitHub workflows and templates
-```
-
-## Development Setup
-
-1. **Fork and clone the repository**
-
+1. Fork the repository on GitHub
+2. Clone your fork locally:
    ```bash
    git clone https://github.com/YOUR_USERNAME/nexus-plugin-template.git
    cd nexus-plugin-template
    ```
-
-2. **Install dependencies**
-
+3. Add the upstream remote:
    ```bash
-   npm install
+   git remote add upstream https://github.com/adverant/nexus-plugin-template.git
    ```
 
-3. **Build the SDK**
+## Development Setup
 
-   ```bash
-   npm run build
-   ```
+### TypeScript/SDK Development
 
-4. **Run tests**
+```bash
+# Install dependencies
+npm install
 
-   ```bash
-   npm test
-   ```
+# Build the SDK
+npm run build
+
+# Run tests
+npm test
+
+# Run linting
+npm run lint
+
+# Type checking
+npm run typecheck
+```
+
+### Python Template Development
+
+```bash
+cd templates/python
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # or `venv\Scripts\activate` on Windows
+
+# Install dependencies
+pip install -e ".[dev]"
+
+# Run tests
+pytest
+
+# Run linting
+ruff check .
+mypy src/
+```
+
+### Go Template Development
+
+```bash
+cd templates/go
+
+# Download dependencies
+go mod tidy
+
+# Run tests
+go test ./...
+
+# Run linting
+golangci-lint run
+
+# Build
+go build .
+```
 
 ## Making Changes
 
@@ -75,14 +106,15 @@ nexus-plugin-template/
 
 Use descriptive branch names:
 
-- `feature/add-python-template` - New features
-- `fix/schema-validation-error` - Bug fixes
+- `feature/add-new-template` - New features
+- `fix/schema-validation-bug` - Bug fixes
 - `docs/update-api-reference` - Documentation updates
-- `refactor/simplify-builder-api` - Code refactoring
+- `refactor/simplify-plugin-builder` - Code refactoring
+- `test/add-integration-tests` - Test additions
 
 ### Commit Messages
 
-Follow [Conventional Commits](https://www.conventionalcommits.org/):
+Follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
 
 ```
 <type>(<scope>): <description>
@@ -92,180 +124,269 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/):
 [optional footer]
 ```
 
-**Types**:
+**Types:**
 - `feat`: New feature
 - `fix`: Bug fix
-- `docs`: Documentation only
-- `style`: Code style (formatting, etc.)
-- `refactor`: Code change without feature/fix
-- `test`: Adding/updating tests
-- `chore`: Build process, dependencies
+- `docs`: Documentation changes
+- `style`: Code style changes (formatting, etc.)
+- `refactor`: Code refactoring
+- `test`: Adding or updating tests
+- `chore`: Maintenance tasks
 
-**Examples**:
-
-```bash
-feat(sdk): add streaming support for tool handlers
-fix(templates): resolve type error in Python template
-docs(api): update MCPServerBuilder examples
+**Examples:**
+```
+feat(sdk): add support for streaming responses
+fix(python): handle empty input validation
+docs(readme): add installation instructions for Go
+test(mcp-server): add integration tests for GraphRAG
 ```
 
-## Pull Request Process
+### Development Workflow
 
-1. **Create a feature branch**
+1. **Sync with upstream:**
+   ```bash
+   git fetch upstream
+   git checkout main
+   git merge upstream/main
+   ```
 
+2. **Create a feature branch:**
    ```bash
    git checkout -b feature/your-feature-name
    ```
 
-2. **Make your changes**
+3. **Make your changes** with appropriate tests
 
-   - Write clean, documented code
-   - Add or update tests
-   - Update documentation if needed
-
-3. **Run quality checks**
-
+4. **Run all checks:**
    ```bash
    npm run lint
    npm run typecheck
    npm test
    ```
 
-4. **Push and create PR**
+5. **Commit your changes:**
+   ```bash
+   git add .
+   git commit -m "feat(scope): your change description"
+   ```
 
+6. **Push to your fork:**
    ```bash
    git push origin feature/your-feature-name
    ```
 
-5. **PR Requirements**:
+7. **Open a Pull Request** on GitHub
 
-   - Clear description of changes
-   - Link to related issue (if applicable)
-   - All CI checks passing
-   - At least one approval from maintainers
-   - No merge conflicts
+## Pull Request Process
 
-## Style Guidelines
+### Before Submitting
+
+- [ ] All tests pass locally
+- [ ] Linting passes with no errors
+- [ ] TypeScript compiles without errors
+- [ ] New code has appropriate test coverage
+- [ ] Documentation is updated if needed
+- [ ] CHANGELOG.md is updated for significant changes
+
+### PR Description Template
+
+When opening a PR, please include:
+
+```markdown
+## Description
+[Describe your changes]
+
+## Type of Change
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Breaking change
+- [ ] Documentation update
+
+## Testing
+[Describe how you tested your changes]
+
+## Checklist
+- [ ] Tests pass
+- [ ] Linting passes
+- [ ] Documentation updated
+- [ ] CHANGELOG updated (if applicable)
+```
+
+### Review Process
+
+1. A maintainer will review your PR
+2. Address any requested changes
+3. Once approved, your PR will be merged
+4. Your contribution will be included in the next release
+
+## Coding Standards
 
 ### TypeScript
 
-- Use TypeScript strict mode
+- Use strict TypeScript configuration
 - Prefer `const` over `let`
-- Use explicit types for function parameters and return values
-- Document public APIs with JSDoc
+- Use meaningful variable names
+- Document public APIs with JSDoc comments
+- Use Zod for runtime validation
+- Follow existing code patterns
 
 ```typescript
-/**
- * Creates a new plugin builder instance.
- * @param config - Plugin configuration options
- * @returns A new PluginBuilder instance
- */
-export function createPlugin(config: PluginConfig): PluginBuilder {
-  return new PluginBuilder(config);
+// ✅ Good
+const validateInput = (input: unknown): ValidatedInput => {
+  return InputSchema.parse(input);
+};
+
+// ❌ Bad
+function validate(i: any) {
+  return i;
 }
 ```
 
 ### Python
 
-- Follow PEP 8 style guide
-- Use type hints (Python 3.10+)
-- Document with docstrings (Google style)
+- Follow PEP 8 style guidelines
+- Use type hints for all public functions
+- Use Pydantic for data validation
+- Write docstrings for public APIs
 
 ```python
-def create_plugin(config: PluginConfig) -> PluginBuilder:
-    """Creates a new plugin builder instance.
+# ✅ Good
+def process_input(data: InputModel) -> OutputModel:
+    """Process the input data and return results.
     
     Args:
-        config: Plugin configuration options.
+        data: The validated input model.
         
     Returns:
-        A new PluginBuilder instance.
+        The processed output model.
     """
-    return PluginBuilder(config)
+    return OutputModel(result=data.value.upper())
+
+# ❌ Bad
+def process(d):
+    return d.upper()
 ```
 
 ### Go
 
-- Follow Go style guidelines
-- Use `gofmt` and `golint`
+- Follow Go idioms and conventions
+- Use meaningful error messages
 - Document exported functions
+- Handle errors explicitly
 
 ```go
-// CreatePlugin creates a new plugin builder instance.
-func CreatePlugin(config PluginConfig) *PluginBuilder {
-    return NewPluginBuilder(config)
+// ✅ Good
+// ProcessInput handles the input and returns the result.
+func ProcessInput(input *InputModel) (*OutputModel, error) {
+    if input == nil {
+        return nil, fmt.Errorf("input cannot be nil")
+    }
+    return &OutputModel{Result: strings.ToUpper(input.Value)}, nil
+}
+
+// ❌ Bad
+func process(i interface{}) interface{} {
+    return i
 }
 ```
 
 ## Testing
 
+### Test Requirements
+
+- All new features must have tests
+- Bug fixes should include regression tests
+- Maintain or improve code coverage
+- Tests should be deterministic (no flaky tests)
+
 ### Running Tests
 
 ```bash
-# All tests
+# TypeScript
 npm test
+npm run test:coverage
 
-# Specific package
-npm test --workspace=@adverant-nexus/plugin-sdk
+# Python
+cd templates/python
+pytest --cov=src
 
-# With coverage
-npm test -- --coverage
+# Go
+cd templates/go
+go test -cover ./...
 ```
 
-### Writing Tests
-
-- Test happy paths and edge cases
-- Use descriptive test names
-- Mock external services
+### Test Patterns
 
 ```typescript
+import { describe, it, expect } from 'vitest';
+import { PluginBuilder } from '../src';
+
 describe('PluginBuilder', () => {
-  describe('addTool', () => {
-    it('should add a tool with valid schema', () => {
-      const builder = PluginBuilder.create({ name: 'test' });
-      builder.addTool({
-        name: 'test_tool',
-        inputSchema: z.object({ value: z.string() }),
-        handler: async () => ({}),
-      });
-      expect(builder.tools).toHaveLength(1);
+  it('should create a valid plugin', () => {
+    const plugin = PluginBuilder.create({
+      id: 'test-plugin',
+      name: 'test',
+      displayName: 'Test Plugin',
+      version: '1.0.0',
+      description: 'A test plugin',
     });
 
-    it('should throw on invalid schema', () => {
-      const builder = PluginBuilder.create({ name: 'test' });
-      expect(() => {
-        builder.addTool({ name: '', inputSchema: null });
-      }).toThrow();
-    });
+    const pid = plugin.generatePID();
+    expect(pid.id).toBe('test-plugin');
+  });
+
+  it('should validate required fields', () => {
+    expect(() => {
+      PluginBuilder.create({} as any);
+    }).toThrow();
   });
 });
 ```
 
 ## Documentation
 
-### Updating Docs
+### When to Update Documentation
 
-- Keep README.md in sync with features
-- Update API reference for code changes
-- Add examples for new features
+- Adding new features or APIs
+- Changing existing behavior
+- Fixing unclear or incorrect documentation
+- Adding examples or tutorials
+
+### Documentation Files
+
+- `README.md` - Project overview and quick start
+- `docs/getting-started.md` - Detailed setup guide
+- `docs/api-reference.md` - API documentation
+- `docs/CLAUDE_PROMPT.md` - LLM development context
+- `CHANGELOG.md` - Version history
+
+### Writing Good Documentation
+
 - Use clear, concise language
+- Include code examples
+- Show expected outputs
+- Document edge cases
+- Keep it up to date
 
-### Documentation Structure
+## Community
 
-```
-docs/
-├── getting-started.md      # Quick start guide
-├── api-reference.md        # Full API documentation
-├── mcp-integration.md      # MCP/Claude Code guide
-├── security-guidelines.md  # Security best practices
-├── deployment.md           # VPS deployment
-└── CLAUDE_PROMPT.md        # LLM context document
-```
+### Getting Help
 
-## Questions?
+- **GitHub Issues**: For bug reports and feature requests
+- **GitHub Discussions**: For questions and community discussion
+- **Documentation**: [docs.nexus.adverant.ai/plugins](https://docs.nexus.adverant.ai/plugins)
 
-- Open a [GitHub Discussion](https://github.com/adverant/nexus-plugin-template/discussions)
-- Join our [Discord](https://discord.gg/adverant)
-- Email: support@adverant.ai
+### Recognition
 
-Thank you for contributing!
+All contributors are recognized in:
+- GitHub's contributor list
+- Release notes for significant contributions
+- Annual contributor recognition (for sustained contributions)
+
+## Thank You!
+
+Your contributions make this project better for everyone. We appreciate your time and effort!
+
+---
+
+*If you have questions about contributing, feel free to open a discussion on GitHub.*

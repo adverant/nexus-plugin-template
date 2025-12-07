@@ -2,56 +2,73 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.0.0] - 2024-12-07
+
+### Added
+
+- **SDK Core**
+  - `PluginBuilder` - Fluent API for creating Nexus plugins
+  - `MCPServerBuilder` - Build MCP-compliant servers for AI IDE integration
+  - Zod schema integration with automatic JSON Schema conversion
+  - Plugin Intelligence Document (PID) generation and validation
+  - Multi-format export (JSON, MCP, Markdown, OpenAPI)
+  - Testing utilities with mock services
+
+- **TypeScript Templates**
+  - `basic` - Simple calculator plugin demonstrating core concepts
+  - `mcp-server` - Advanced plugin with Nexus GraphRAG integration
+  - `external-api` - Weather API plugin with caching, rate limiting, and retry logic
+
+- **Python Template**
+  - FastMCP-based plugin structure
+  - Pydantic validation integration
+  - Async handler support
+  - Full example with tests
+
+- **Go Template**
+  - mcp-go based plugin structure
+  - JSON Schema validation
+  - Complete example implementation
+  - Makefile for common operations
+
+- **GitHub Actions Workflows**
+  - `ci.yml` - Build, test, and lint for all languages
+  - `verify.yml` - Nexus verification pipeline
+  - `release.yml` - Semantic versioning with changelog generation
+  - `security.yml` - Comprehensive security scanning (CodeQL, Trivy, Semgrep)
+
+- **Documentation**
+  - Getting started guide for all languages
+  - Full API reference
+  - MCP integration guide for Claude Code, Cursor, VS Code
+  - Security guidelines and best practices
+  - VPS deployment guide
+  - LLM-ingestible development context (CLAUDE_PROMPT.md)
+
+### Security
+
+- Input validation with Zod schemas
+- Secrets management guidelines
+- Docker security configuration
+- Container scanning with Trivy
+- Static analysis with Semgrep
+- Secret scanning with truffleHog
+- License compliance checking
 
 ## [Unreleased]
 
-### Added
-- Initial public release preparation
-- TypeScript templates (basic, mcp-server, external-api)
-- Python template (basic)
-- Go template (basic)
-- Plugin Intelligence Document (PID) schema
-- GitHub Actions workflows (CI, CodeQL, Release)
-- Comprehensive documentation
+### Planned
 
-## [3.0.0] - 2025-01-XX
+- Rust template
+- Plugin marketplace integration
+- Visual Studio Code extension
+- Plugin hot-reload support
+- Enhanced PID validation
 
-### Added
-- Plugin Intelligence Document (PID) support for LLM-optimized metadata
-- `PluginBuilder` fluent API for plugin creation
-- `MCPServerBuilder` for MCP-compliant server creation
-- Zod schema integration with automatic JSON Schema conversion
-- Multi-format export (JSON, MCP, Markdown, OpenAPI)
-- Testing utilities with mocks and helpers
-- Execution profiles with performance, cost, and reliability metrics
-- Trust levels and security certifications
-- Context requirements for permissions and services
+---
 
-### Changed
-- Complete SDK rewrite for v3.0
-- New manifest schema (v2) with enhanced capabilities
-- Improved type safety throughout
-
-### Removed
-- Legacy v2.x APIs (see migration guide)
-
-## [2.0.0] - 2024-XX-XX
-
-### Added
-- Initial MCP support
-- Basic plugin scaffolding
-- Simple validation
-
-## [1.0.0] - 2024-XX-XX
-
-### Added
-- Initial release
-- Basic plugin architecture
-- Command-line tools
-
-[Unreleased]: https://github.com/adverant/nexus-plugin-template/compare/v3.0.0...HEAD
-[3.0.0]: https://github.com/adverant/nexus-plugin-template/compare/v2.0.0...v3.0.0
-[2.0.0]: https://github.com/adverant/nexus-plugin-template/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/adverant/nexus-plugin-template/releases/tag/v1.0.0
+[Unreleased]: https://github.com/adverant/nexus-plugin-template/compare/v1.0.0...HEAD
