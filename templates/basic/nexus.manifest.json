@@ -1,0 +1,47 @@
+{
+  "$schema": "https://schema.nexus.adverant.ai/plugin-manifest/v2.json",
+  "name": "nexus-plugin-calculator",
+  "displayName": "Calculator Plugin",
+  "version": "1.0.0",
+  "description": "A simple calculator plugin demonstrating core Nexus plugin concepts",
+  "author": {
+    "name": "Your Name",
+    "email": "you@example.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/nexus-plugin-calculator"
+  },
+  "nexus": {
+    "minVersion": "2.0.0",
+    "executionMode": "mcp_container",
+    "capabilities": ["commands", "mcp_tools"],
+    "permissions": [],
+    "entrypoint": "dist/index.js",
+    "healthCheck": "/health"
+  },
+  "mcp": {
+    "enabled": true,
+    "tools": [
+      {
+        "name": "calculate",
+        "description": "Perform arithmetic calculations"
+      },
+      {
+        "name": "convert_units",
+        "description": "Convert between measurement units"
+      }
+    ]
+  },
+  "resources": {
+    "cpuMillicores": 100,
+    "memoryMB": 128,
+    "timeoutMs": 5000
+  },
+  "tests": {
+    "command": "npm test",
+    "coverage": {
+      "minimum": 80
+    }
+  }
+}
