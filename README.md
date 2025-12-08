@@ -1,13 +1,19 @@
-# Nexus Plugin Template
+<div align="center">
+  <img src="docs/images/adverant-logo-final.svg" alt="Adverant Logo" width="240"/>
 
-[![CI](https://github.com/adverant/nexus-plugin-template/actions/workflows/ci.yml/badge.svg)](https://github.com/adverant/nexus-plugin-template/actions/workflows/ci.yml)
-[![Security](https://github.com/adverant/nexus-plugin-template/actions/workflows/security.yml/badge.svg)](https://github.com/adverant/nexus-plugin-template/actions/workflows/security.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![npm](https://img.shields.io/npm/v/@adverant-nexus/plugin-sdk)](https://www.npmjs.com/package/@adverant-nexus/plugin-sdk)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
-[![MCP](https://img.shields.io/badge/MCP-1.0-purple.svg)](https://modelcontextprotocol.io/)
+  # Nexus Plugin Template
 
-**Production-ready SDK and templates for building Nexus plugins with LLM-optimized metadata generation.**
+  **Production-ready SDK and templates for building Nexus plugins with LLM-optimized metadata generation.**
+
+  [![CI](https://github.com/adverant/nexus-plugin-template/actions/workflows/ci.yml/badge.svg)](https://github.com/adverant/nexus-plugin-template/actions/workflows/ci.yml)
+  [![Security](https://github.com/adverant/nexus-plugin-template/actions/workflows/security.yml/badge.svg)](https://github.com/adverant/nexus-plugin-template/actions/workflows/security.yml)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  [![npm](https://img.shields.io/npm/v/@adverant-nexus/plugin-sdk)](https://www.npmjs.com/package/@adverant-nexus/plugin-sdk)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
+  [![MCP](https://img.shields.io/badge/MCP-1.0-purple.svg)](https://modelcontextprotocol.io/)
+
+  [The Problem](#the-problem-this-solves) • [Architecture](#architecture-overview) • [Quick Start](#quick-start) • [SDK](#plugin-sdk) • [Templates](#plugin-templates)
+</div>
 
 ---
 
@@ -657,3 +663,16 @@ MIT License - see [LICENSE](./LICENSE)
 - [Zod](https://zod.dev/) for schema validation
 - [FastMCP](https://github.com/jlowin/fastmcp) for Python MCP support
 - [mcp-go](https://github.com/mark3labs/mcp-go) for Go MCP support
+
+---
+
+<div align="center">
+  <strong>Built with ❤️ by <a href="https://adverant.ai">Adverant</a></strong>
+
+  <br/><br/>
+
+  <a href="https://adverant.ai">Website</a> •
+  <a href="https://adverant.ai/docs">Docs</a> •
+  <a href="https://twitter.com/adverant">Twitter</a> •
+  <a href="https://discord.gg/adverant">Discord</a>
+</div>
