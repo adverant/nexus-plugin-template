@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-{{PLUGIN_NAME}}
+  namespace: nexus
+  labels:
+    app.kubernetes.io/name: {{PLUGIN_NAME}}
+    app.kubernetes.io/component: plugin
+    adverant.ai/plugin: "true"
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: {{PLUGIN_NAME}}
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      protocol: TCP

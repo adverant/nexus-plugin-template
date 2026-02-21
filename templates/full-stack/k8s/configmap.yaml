@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{PLUGIN_NAME}}-config
+  namespace: nexus
+  labels:
+    app.kubernetes.io/name: {{PLUGIN_NAME}}
+    app.kubernetes.io/component: plugin
+data:
+  LOG_LEVEL: "info"
+  # Add your plugin-specific non-sensitive configuration here
+  # Example:
+  # MAX_CONCURRENT_REQUESTS: "10"
+  # CACHE_TTL_SECONDS: "300"

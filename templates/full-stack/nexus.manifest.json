@@ -1,0 +1,150 @@
+{
+  "name": "{{PLUGIN_NAME}}",
+  "display_name": "{{PLUGIN_DISPLAY_NAME}}",
+  "version": "1.0.0",
+  "description": "{{PLUGIN_DISPLAY_NAME}} - A Nexus marketplace plugin",
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": "https://github.com/adverant/{{REPO_NAME}}",
+  "homepage": "https://github.com/adverant/{{REPO_NAME}}",
+  "category": "{{PLUGIN_CATEGORY}}",
+  "tags": [],
+
+  "nexus": {
+    "minVersion": "1.0.0",
+    "executionMode": "mcp_container",
+    "capabilities": [
+      "data_processing"
+    ],
+    "permissions": [
+      "network:outbound:api.example.com"
+    ],
+    "entrypoint": {
+      "type": "http",
+      "port": 8080,
+      "healthCheck": "/health",
+      "readinessCheck": "/ready",
+      "livenessCheck": "/live"
+    }
+  },
+
+  "ui": {
+    "enabled": true,
+    "path": "/",
+    "framework": "react",
+    "components": [
+      {
+        "name": "overview",
+        "type": "panel",
+        "description": "Plugin overview and status"
+      },
+      {
+        "name": "items",
+        "type": "panel",
+        "description": "Item management"
+      },
+      {
+        "name": "terminal",
+        "type": "iframe",
+        "description": "Claude Code terminal integration"
+      }
+    ]
+  },
+
+  "api": {
+    "basePath": "/api/v1",
+    "endpoints": [
+      { "method": "GET", "path": "/items", "description": "List items" },
+      { "method": "GET", "path": "/items/:id", "description": "Get item by ID" },
+      { "method": "POST", "path": "/items", "description": "Create item" },
+      { "method": "PATCH", "path": "/items/:id", "description": "Update item" },
+      { "method": "DELETE", "path": "/items/:id", "description": "Delete item" },
+      { "method": "GET", "path": "/info", "description": "Plugin info and available endpoints" }
+    ]
+  },
+
+  "websocket": {
+    "enabled": true,
+    "path": "/ws",
+    "events": [
+      "item:created",
+      "item:updated",
+      "item:deleted",
+      "connected",
+      "pong"
+    ]
+  },
+
+  "database": {
+    "required": false,
+    "type": "postgresql",
+    "migrationsPath": "database/migrations/"
+  },
+
+  "resources": {
+    "cpuMillicores": 250,
+    "memoryMB": 256,
+    "diskGB": 5,
+    "timeoutMs": 30000
+  },
+
+  "docker": {
+    "image": "{{PLUGIN_NAME}}",
+    "registry": "localhost:5000",
+    "buildArgs": {}
+  },
+
+  "deployment": {
+    "replicas": 1,
+    "strategy": "RollingUpdate",
+    "autoscaling": {
+      "enabled": false,
+      "minReplicas": 1,
+      "maxReplicas": 3,
+      "cpuThreshold": 70,
+      "memoryThreshold": 80
+    }
+  },
+
+  "has_web_ui": true,
+  "ui_path": "/",
+
+  "dependencies": {
+    "services": [],
+    "external": []
+  },
+
+  "environment": {
+    "required": [
+      "PORT"
+    ],
+    "optional": [
+      "DATABASE_URL",
+      "NEXUS_API_URL",
+      "NEXUS_API_KEY",
+      "OPENROUTER_API_KEY",
+      "NEXUS_GRAPHRAG_URL",
+      "NEXUS_MAGEAGENT_URL",
+      "NEXUS_SANDBOX_URL",
+      "NEXUS_FILEPROCESS_URL",
+      "NEXUS_SKILLS_ENGINE_URL"
+    ]
+  },
+
+  "security": {
+    "runAsNonRoot": true,
+    "runAsUser": 1001,
+    "readOnlyRootFilesystem": false,
+    "allowPrivilegeEscalation": false
+  },
+
+  "logging": {
+    "format": "json",
+    "output": "stdout"
+  },
+
+  "tests": {
+    "command": "npm test",
+    "timeout": 60000
+  }
+}

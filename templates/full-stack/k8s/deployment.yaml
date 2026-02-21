@@ -1,0 +1,165 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: plugin-{{PLUGIN_NAME}}-blue
+  namespace: nexus
+  labels:
+    app.kubernetes.io/name: {{PLUGIN_NAME}}
+    app.kubernetes.io/component: plugin
+    app.kubernetes.io/part-of: adverant-nexus
+    adverant.ai/plugin: "true"
+    adverant.ai/execution-mode: mcp_container
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{PLUGIN_NAME}}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{PLUGIN_NAME}}
+        app.kubernetes.io/component: plugin
+        adverant.ai/plugin: "true"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+      containers:
+        - name: {{PLUGIN_NAME}}
+          image: localhost:5000/{{PLUGIN_NAME}}:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            # Plugin identity
+            - name: PLUGIN_NAME
+              value: "{{PLUGIN_NAME}}"
+            - name: PLUGIN_VERSION
+              value: "1.0.0"
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "8080"
+
+            # K8s context
+            - name: K8S_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: K8S_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+
+            # Nexus platform integration
+            - name: NEXUS_API_URL
+              value: "https://api.adverant.ai"
+            - name: NEXUS_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{PLUGIN_NAME}}-secrets
+                  key: NEXUS_API_KEY
+                  optional: true
+
+            # Database
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{PLUGIN_NAME}}-secrets
+                  key: DATABASE_URL
+                  optional: true
+
+            # Nexus internal services
+            - name: NEXUS_GRAPHRAG_URL
+              value: "http://nexus-graphrag.nexus.svc.cluster.local:9000"
+            - name: NEXUS_MAGEAGENT_URL
+              value: "http://nexus-mageagent.nexus.svc.cluster.local:9010"
+            - name: NEXUS_SANDBOX_URL
+              value: "http://nexus-sandbox.nexus.svc.cluster.local:9020"
+            - name: NEXUS_FILEPROCESS_URL
+              value: "http://nexus-fileprocess.nexus.svc.cluster.local:9030"
+            - name: NEXUS_SKILLS_ENGINE_URL
+              value: "http://nexus-skills-engine.nexus.svc.cluster.local:9040"
+
+            # LLM access
+            - name: OPENROUTER_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: nexus-secrets
+                  key: OPENROUTER_API_KEY
+                  optional: true
+
+            # Plugin endpoint for self-registration
+            - name: PLUGIN_ENDPOINT
+              value: "http://svc-{{PLUGIN_NAME}}.nexus.svc.cluster.local:8080"
+
+          envFrom:
+            - configMapRef:
+                name: {{PLUGIN_NAME}}-config
+                optional: true
+
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 2000m
+              memory: 2Gi
+
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          livenessProbe:
+            httpGet:
+              path: /live
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 12
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
+
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp/plugin-data
+            - name: data
+              mountPath: /data
+
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 1Gi
+        - name: data
+          emptyDir:
+            sizeLimit: 5Gi
+
+      terminationGracePeriodSeconds: 30
