@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Brand CSS custom properties (set by BrandingProvider at runtime) */
+:root {
+  --brand-primary: #8B6BAE;
+  --brand-secondary: #8B7355;
+  --brand-accent: #22c55e;
+}

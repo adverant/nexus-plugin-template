@@ -1,0 +1,98 @@
+{
+  "name": "{{PLUGIN_NAME}}",
+  "displayName": "{{PLUGIN_DISPLAY_NAME}}",
+  "version": "1.0.0",
+  "description": "{{PLUGIN_DESCRIPTION}}",
+  "developer": {
+    "name": "Adverant",
+    "url": "https://adverant.ai",
+    "email": "plugins@adverant.ai",
+    "verified": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/adverant/{{REPO_NAME}}"
+  },
+  "license": "Apache-2.0",
+  "keywords": [],
+  "nexus": {
+    "minVersion": "1.0.0",
+    "executionMode": "mcp_container",
+    "isolationLevel": 2,
+    "capabilities": [],
+    "permissions": [
+      "filesystem:temp"
+    ],
+    "entrypoint": "dist/index.js",
+    "healthCheck": "/{{PLUGIN_SLUG}}/api/health",
+    "readinessCheck": "/{{PLUGIN_SLUG}}/api/health",
+    "livenessCheck": "/healthz"
+  },
+  "resources": {
+    "cpuMillicores": 500,
+    "memoryMB": 1024,
+    "diskGB": 10,
+    "timeoutMs": 60000,
+    "port": 9099
+  },
+  "api": {
+    "version": "v1",
+    "basePath": "/{{PLUGIN_SLUG}}/api",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/health",
+        "description": "Service health check"
+      },
+      {
+        "method": "GET",
+        "path": "/entities",
+        "description": "List entities"
+      },
+      {
+        "method": "POST",
+        "path": "/entities",
+        "description": "Create entity"
+      }
+    ]
+  },
+  "pricing": {
+    "model": "tiered",
+    "currency": "USD",
+    "tiers": [
+      {
+        "name": "free",
+        "displayName": "Free",
+        "priceMonthly": 0,
+        "limits": {},
+        "features": ["basic"]
+      },
+      {
+        "name": "professional",
+        "displayName": "Professional",
+        "priceMonthly": 2900,
+        "limits": {},
+        "features": ["basic", "advanced"]
+      }
+    ]
+  },
+  "ui": {
+    "tier": 2,
+    "type": "template",
+    "navigation": {
+      "location": "dedicated-tab",
+      "icon": "puzzle",
+      "label": "{{PLUGIN_DISPLAY_NAME}}"
+    }
+  },
+  "marketplace": {
+    "category": "{{PLUGIN_CATEGORY}}",
+    "tags": [],
+    "screenshots": [],
+    "documentation": "https://docs.adverant.ai/plugins/{{PLUGIN_SLUG}}",
+    "support": {
+      "email": "support@adverant.ai",
+      "docs": "https://docs.adverant.ai/plugins/{{PLUGIN_SLUG}}"
+    }
+  }
+}

@@ -1,0 +1,90 @@
+# CUSTOMIZE: Replace all {{PLUGIN_NAME}} and {{PLUGIN_SLUG}} placeholders
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{PLUGIN_NAME}}
+  namespace: nexus
+  labels:
+    app: {{PLUGIN_NAME}}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{PLUGIN_NAME}}
+  template:
+    metadata:
+      labels:
+        app: {{PLUGIN_NAME}}
+    spec:
+      containers:
+        - name: {{PLUGIN_NAME}}
+          image: localhost:5000/{{PLUGIN_NAME}}:latest
+          ports:
+            - containerPort: 9099
+              name: http
+            - containerPort: 9100
+              name: ws
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "9099"
+            - name: WS_PORT
+              value: "9100"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: nexus-auth-secrets
+                  key: jwt-secret
+            - name: POSTGRES_HOST
+              value: "nexus-postgres.nexus.svc.cluster.local"
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_DB
+              value: "nexus"
+            - name: POSTGRES_USER
+              value: "nexus"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nexus-postgres-secrets
+                  key: password
+            - name: REDIS_HOST
+              value: "redis.nexus.svc.cluster.local"
+            - name: REDIS_PORT
+              value: "6379"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 9099
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 9099
+            initialDelaySeconds: 30
+            periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{PLUGIN_NAME}}
+  namespace: nexus
+spec:
+  selector:
+    app: {{PLUGIN_NAME}}
+  ports:
+    - name: http
+      port: 9099
+      targetPort: 9099
+    - name: ws
+      port: 9100
+      targetPort: 9100
