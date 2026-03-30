@@ -33,11 +33,18 @@
     "memoryMB": 1024,
     "diskGB": 10,
     "timeoutMs": 60000,
-    "port": 9099
+    "port": 9099,
+    "wsPort": 0
   },
   "api": {
     "version": "v1",
     "basePath": "/{{PLUGIN_SLUG}}/api",
+    "websocket": {
+      "enabled": false,
+      "path": "/{{PLUGIN_SLUG}}/ws",
+      "port": 0,
+      "timeout": 3600
+    },
     "endpoints": [
       {
         "method": "GET",
