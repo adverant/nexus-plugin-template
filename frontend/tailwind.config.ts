@@ -13,6 +13,8 @@ const config: Config = {
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './hooks/**/*.{js,ts,jsx,tsx,mdx}',
     './lib/**/*.{js,ts,jsx,tsx,mdx}',
+    // Universal chat package — host app processes its Tailwind classes
+    './node_modules/@adverant/nexus-chat-ui/src/**/*.{js,ts,jsx,tsx}',
   ],
   theme: {
     extend: {
