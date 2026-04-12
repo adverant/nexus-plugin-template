@@ -13,6 +13,7 @@ import { useEffect, useCallback, useRef } from 'react'
 import { useWebSocket } from '@/hooks/useWebSocket'
 import { usePluginWSStore } from '@/stores/plugin-ws-store'
 import { useAuthToken } from '@/stores/dashboard-store'
+import { useProgressCommandCenterStore, getJobLabel } from '@/stores/progress-command-center-store'
 import type { WSIncomingMessage } from '@/types/plugin'
 
 function getWSUrl(): string | null {
@@ -64,31 +65,47 @@ export function PluginWSProvider({ children }: { children: React.ReactNode }) {
         break
 
       case 'generation_progress': {
+        const progressJobId = message.payload.job_id || message.payload.project_id
         const rawProgress = message.payload.progress?.progress ?? message.payload.progress ?? 0
         const normalizedProgress = typeof rawProgress === 'number' && rawProgress <= 1 && rawProgress > 0
           ? Math.round(rawProgress * 100)
           : rawProgress
+        const progressStage = message.payload.progress?.stage || message.payload.stage || 'processing'
+        const progressMsg = message.payload.progress?.message || message.payload.message || 'Processing...'
 
         setJobProgress({
-          jobId: message.payload.job_id || message.payload.project_id,
+          jobId: progressJobId,
           projectId: message.payload.project_id,
           chapterNumber: message.payload.chapter_number,
           beatNumber: message.payload.beat_number,
           jobType: message.payload.job_type,
-          stage: message.payload.progress?.stage || message.payload.stage || 'processing',
+          stage: progressStage,
           progress: normalizedProgress,
-          message: message.payload.progress?.message || message.payload.message || 'Processing...',
+          message: progressMsg,
           steps: message.payload.steps,
           currentStep: message.payload.currentStep ?? message.payload.current_step,
+          entityName: message.payload.entityName ?? message.payload.entity_name,
+          projectName: message.payload.projectName ?? message.payload.project_name,
+        })
+        // Direct PCC update — bypass cross-store subscription
+        useProgressCommandCenterStore.getState().upsertJob({
+          jobId: progressJobId,
+          projectId: message.payload.project_id,
+          jobType: message.payload.job_type,
+          jobLabel: message.payload.job_type ? getJobLabel(message.payload.job_type) : undefined,
+          stage: progressStage,
+          progress: typeof normalizedProgress === 'number' ? normalizedProgress : 0,
+          message: typeof progressMsg === 'string' ? progressMsg.slice(0, 500) : 'Processing...',
           entityName: message.payload.entityName ?? message.payload.entity_name,
           projectName: message.payload.projectName ?? message.payload.project_name,
         })
         break
       }
 
-      case 'generation_complete':
+      case 'generation_complete': {
+        const completeJobId = message.payload.job_id || message.payload.project_id
         setJobComplete({
-          jobId: message.payload.job_id || message.payload.project_id,
+          jobId: completeJobId,
           projectId: message.payload.project_id,
           chapterNumber: message.payload.chapter_number,
           beatNumber: message.payload.beat_number,
@@ -98,18 +115,25 @@ export function PluginWSProvider({ children }: { children: React.ReactNode }) {
             word_count: 0,
           },
         })
+        // Direct PCC update — guaranteed to work regardless of subscription state
+        useProgressCommandCenterStore.getState().completeJob(completeJobId)
         break
+      }
 
-      case 'generation_error':
+      case 'generation_error': {
+        const errorJobId = message.payload.job_id || message.payload.project_id
         setJobError({
-          jobId: message.payload.job_id || message.payload.project_id,
+          jobId: errorJobId,
           projectId: message.payload.project_id,
           chapterNumber: message.payload.chapter_number,
           beatNumber: message.payload.beat_number,
           jobType: message.payload.job_type,
           error: message.payload.error || 'Unknown generation error',
         })
+        // Direct PCC update — guaranteed to work regardless of subscription state
+        useProgressCommandCenterStore.getState().failJob(errorJobId, message.payload.error || 'Unknown generation error')
         break
+      }
 
       case 'error':
         console.error('[PluginWS] Server error:', message.payload?.message)

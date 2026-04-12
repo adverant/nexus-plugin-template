@@ -92,7 +92,7 @@ const JOB_TYPE_LABELS: Record<string, string> = {
   claim_validation: 'Claim Validation',
 }
 
-function getJobLabel(jobType: string | undefined | null): string {
+export function getJobLabel(jobType: string | undefined | null): string {
   if (!jobType) return 'Processing'
   return JOB_TYPE_LABELS[jobType] || jobType.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 }
@@ -530,11 +530,16 @@ export function initProgressSubscription(): () => void {
       if (currentJobs === prevJobs) return
 
       const store = useProgressCommandCenterStore.getState()
+      const jobsToCleanup: string[] = []
 
       for (const [jobId, wsJob] of Object.entries(currentJobs)) {
         const prevWsJob = prevJobs[jobId]
 
-        if (prevWsJob && prevWsJob.stage === wsJob.stage && prevWsJob.progress === wsJob.progress) {
+        if (prevWsJob
+            && prevWsJob.stage === wsJob.stage
+            && prevWsJob.progress === wsJob.progress
+            && prevWsJob.completedAt === wsJob.completedAt
+            && prevWsJob.error === wsJob.error) {
           continue
         }
 
@@ -543,8 +548,10 @@ export function initProgressSubscription(): () => void {
 
         if (wsJob.completedAt && wsJob.stage === 'complete') {
           store.completeJob(jobId)
+          jobsToCleanup.push(jobId)
         } else if (wsJob.completedAt && wsJob.stage === 'error') {
           store.failJob(jobId, wsJob.error || 'Unknown error')
+          jobsToCleanup.push(jobId)
         } else {
           store.upsertJob({
             jobId,
@@ -568,8 +575,44 @@ export function initProgressSubscription(): () => void {
           })
         }
       }
+
+      // Batch cleanup: remove completed/errored jobs from ws-store to prevent stale accumulation
+      if (jobsToCleanup.length > 0) {
+        const wsStore = usePluginWSStore.getState()
+        for (const id of jobsToCleanup) {
+          wsStore.removeJob(id)
+        }
+      }
     }
   )
+
+  // Reconcile current ws-store state immediately — handles completions that arrived
+  // before this subscription was created (e.g., during component unmount/remount gap)
+  const wsState = usePluginWSStore.getState()
+  const pccState = useProgressCommandCenterStore.getState()
+  for (const [jobId, wsJob] of Object.entries(wsState.activeJobs)) {
+    const existing = pccState.jobs[jobId]
+    if (wsJob.completedAt && wsJob.stage === 'complete' && (!existing || !existing.completedAt)) {
+      pccState.completeJob(jobId)
+      usePluginWSStore.getState().removeJob(jobId)
+    } else if (wsJob.completedAt && wsJob.stage === 'error' && (!existing || !existing.completedAt)) {
+      pccState.failJob(jobId, wsJob.error || 'Unknown error')
+      usePluginWSStore.getState().removeJob(jobId)
+    } else if (!existing || existing.stage !== wsJob.stage || existing.progress !== wsJob.progress) {
+      const progress = Number.isFinite(wsJob.progress) ? wsJob.progress : 0
+      pccState.upsertJob({
+        jobId,
+        projectId: wsJob.projectId,
+        jobType: wsJob.jobType,
+        jobLabel: wsJob.jobType ? getJobLabel(wsJob.jobType) : undefined,
+        stage: wsJob.stage,
+        progress,
+        message: typeof wsJob.message === 'string' ? wsJob.message.slice(0, 500) : 'Processing...',
+        entityName: wsJob.entityName || deriveEntityName(wsJob.chapterNumber, wsJob.beatNumber),
+        projectName: wsJob.projectName,
+      })
+    }
+  }
 
   return () => {
     unsubscribe()
