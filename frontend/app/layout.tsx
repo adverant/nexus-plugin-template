@@ -5,6 +5,7 @@ import { ThemeInitializer } from './ThemeInitializer';
 import { AppBridgeProvider } from './AppBridgeProvider';
 import { BrandingProvider } from './BrandingProvider';
 import { EmbeddedLayoutWrapper } from './EmbeddedLayoutWrapper';
+import { ChatProvider } from '../components/ChatProvider';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const urbanist = Urbanist({ subsets: ['latin'], variable: '--font-urbanist' });
@@ -29,9 +30,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeInitializer />
         <AppBridgeProvider />
         <BrandingProvider />
-        <EmbeddedLayoutWrapper>
-          {children}
-        </EmbeddedLayoutWrapper>
+        <ChatProvider>
+          <EmbeddedLayoutWrapper>
+            {children}
+          </EmbeddedLayoutWrapper>
+        </ChatProvider>
       </body>
     </html>
   );
